@@ -11,23 +11,30 @@ import time
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision
-
 import sys
+import tempfile
+
 # ── Model ──────────────────────────────────────────────────────────────────────
 _THIS_DIR   = os.path.dirname(os.path.abspath(__file__))
-# If running as packaged executable, store in user home directory to avoid re-downloading
-if hasattr(sys, "_MEIPASS"):
-    _MODEL_DIR = os.path.join(os.path.expanduser("~"), ".bubble_gum_game")
+
+# Use temporary directory for Streamlit Cloud
+if hasattr(sys, "_MEIPASS") or os.environ.get("STREAMLIT_CLOUD"):
+    _MODEL_DIR = os.path.join(tempfile.gettempdir(), ".bubble_gum_game")
     os.makedirs(_MODEL_DIR, exist_ok=True)
     MODEL_PATH = os.path.join(_MODEL_DIR, "face_landmarker.task")
 else:
-    MODEL_PATH  = os.path.join(_THIS_DIR, "face_landmarker.task")
+    # If running as packaged executable, store in user home directory
+    if hasattr(sys, "_MEIPASS"):
+        _MODEL_DIR = os.path.join(os.path.expanduser("~"), ".bubble_gum_game")
+        os.makedirs(_MODEL_DIR, exist_ok=True)
+        MODEL_PATH = os.path.join(_MODEL_DIR, "face_landmarker.task")
+    else:
+        MODEL_PATH  = os.path.join(_THIS_DIR, "face_landmarker.task")
 
 MODEL_URL   = (
     "https://storage.googleapis.com/mediapipe-models/"
     "face_landmarker/face_landmarker/float16/1/face_landmarker.task"
 )
-
 # ── Landmark indices (same 468-point Face Mesh topology) ──────────────────────
 UPPER_LIP    = 13
 LOWER_LIP    = 14

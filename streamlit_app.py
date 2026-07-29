@@ -20,14 +20,18 @@ from utils import lerp
 
 class BubbleGumVideoProcessor(VideoProcessorBase):
     def __init__(self):
-        self.tracker = FaceTracker()
+        try:
+            self.tracker = FaceTracker()
+        except Exception as e:
+            st.error(f"Failed to initialize face tracker: {e}")
+            self.tracker = None
+            
         self.game = GameLogic(num_players=1)
-        self.game.set_bubble_positions(640, 480)  # Will be dynamically updated in recv
+        self.game.set_bubble_positions(640, 480)
         self.t = 0.0
         self.prev_time = time.time()
         self.fps_disp = 30.0
 
-        # Communication queues from Streamlit UI thread
         self.pending_action = None
         self.pending_mode = None
         self.pending_difficulty = None
@@ -63,16 +67,20 @@ class BubbleGumVideoProcessor(VideoProcessorBase):
             self.game.apply_difficulty()
             self.pending_difficulty = None
 
-        # Face tracking
-        results = self.tracker.process(img)
+        # Face tracking with error handling
         face_data = []
-        if results.multi_face_landmarks:
-            for lm in results.multi_face_landmarks:
-                metrics = self.tracker.get_mouth_metrics(lm, w, h)
-                cx = self.tracker.get_face_center_x(lm, w, h)
-                face_data.append((lm, metrics, cx))
-                # Draw tracking guides
-                self.tracker.draw_mouth_landmarks(img, metrics, color=(0, 255, 120))
+        if self.tracker:
+            try:
+                results = self.tracker.process(img)
+                if results.multi_face_landmarks:
+                    for lm in results.multi_face_landmarks:
+                        metrics = self.tracker.get_mouth_metrics(lm, w, h)
+                        cx = self.tracker.get_face_center_x(lm, w, h)
+                        face_data.append((lm, metrics, cx))
+                        self.tracker.draw_mouth_landmarks(img, metrics, color=(0, 255, 120))
+            except Exception as e:
+                # Silently handle tracking errors
+                pass
         
         self.game.assign_faces(face_data, w)
         self.game.update()
@@ -88,8 +96,8 @@ class BubbleGumVideoProcessor(VideoProcessorBase):
             self.game.set_bubble_positions(w, h)
             for p in self.game.players:
                 p.bubble.draw(img)
-            cv = self.game.get_countdown_value()
-            draw_countdown(img, cv if cv else 0, self.t)
+            cv_val = self.game.get_countdown_value()
+            draw_countdown(img, cv_val if cv_val else 0, self.t)
 
         elif state == GameState.PLAYING:
             self.game.set_bubble_positions(w, h)
@@ -145,7 +153,7 @@ def main():
     start_btn = col1.button("Start/Pause")
     reset_btn = col2.button("Reset")
 
-    # RTC Configuration with public Google STUN servers for WebRTC NAT traversal
+    # RTC Configuration with public Google STUN servers
     rtc_config = RTCConfiguration(
         {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
     )
@@ -160,7 +168,7 @@ def main():
     )
 
     # Sync UI buttons to running video processor thread
-    if ctx.video_processor:
+    if ctx and ctx.video_processor:
         target_players = 1 if mode == "1-Player" else 2
         if ctx.video_processor.game.num_players != target_players:
             ctx.video_processor.pending_mode = target_players
