@@ -164,7 +164,9 @@ bubble_gum_game/
 ├── streamlit_app.py      # Streamlit web entry point
 ├── venv/                 # Virtual environment (ignored by git)
 └── src/
-    ├── main.py           # Entry point, core game loop, camera feed, and UI rendering
+    ├── __init__.py       # Package initialization
+    ├── main.py           # Desktop entry point, core game loop, camera feed, and controls
+    ├── ui_drawing.py     # Clean UI drawing functions, design tokens, HUDs, menus, and overlays
     ├── face_tracker.py   # Wrapper around MediaPipe Face Landmarker for landmark extraction
     ├── game_logic.py     # Game states (countdown, menu, playing), player tracker, and blowing logic
     ├── bubble.py         # Bubble physics, animation interpolation, scaling, and pop particles

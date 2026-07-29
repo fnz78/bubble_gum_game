@@ -12,7 +12,7 @@ from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode, RT
 
 from face_tracker import FaceTracker
 from game_logic import GameLogic, GameState
-from main import (
+from ui_drawing import (
     draw_background, draw_menu, draw_countdown, draw_hud,
     draw_player_labels, draw_paused_overlay, draw_winner, draw_fps
 )
