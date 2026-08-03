@@ -1,4 +1,3 @@
-
 # 🎈 Bubble Gum Blow Challenge 💨
 
 Bubble Gum Blow Challenge is an interactive computer vision game built using **Python, OpenCV, and MediaPipe's Face Landmarker Tasks API**. 
